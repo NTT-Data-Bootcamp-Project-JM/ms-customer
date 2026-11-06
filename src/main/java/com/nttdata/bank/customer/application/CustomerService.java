@@ -2,6 +2,7 @@ package com.nttdata.bank.customer.application;
 
 import com.nttdata.bank.customer.api.CustomerDtos.CustomerRequest;
 import com.nttdata.bank.customer.api.CustomerDtos.CustomerResponse;
+import com.nttdata.bank.customer.config.CustomerCatalog;
 import com.nttdata.bank.customer.domain.CustomerDocument;
 import com.nttdata.bank.customer.domain.CustomerRepository;
 import com.nttdata.bank.customer.domain.CustomerRules;
@@ -19,12 +20,15 @@ import java.util.List;
 public class CustomerService {
 
     private final CustomerRepository customers;
+    private final CustomerCatalog catalog;
 
     /**
      * @param customers customer collection
+     * @param catalog document types and profiles stored in Redis
      */
-    public CustomerService(CustomerRepository customers) {
+    public CustomerService(CustomerRepository customers, CustomerCatalog catalog) {
         this.customers = customers;
+        this.catalog = catalog;
     }
 
     /**
@@ -37,6 +41,7 @@ public class CustomerService {
         return Single.fromCallable(() -> {
             validateNames(request);
             CustomerRules.validate(request.customerType(), request.profile(), request.documentType());
+            validateCatalog(request);
             customers.findByDocumentTypeAndDocumentNumber(request.documentType(), request.documentNumber())
                     .ifPresent(existing -> {
                         throw new IllegalArgumentException("A customer with that document already exists");
@@ -72,6 +77,7 @@ public class CustomerService {
         return Single.fromCallable(() -> {
             validateNames(request);
             CustomerRules.validate(request.customerType(), request.profile(), request.documentType());
+            validateCatalog(request);
             CustomerDocument current = load(id);
             customers.findByDocumentTypeAndDocumentNumber(request.documentType(), request.documentNumber())
                     .filter(existing -> !existing.getId().equals(id))
@@ -100,6 +106,15 @@ public class CustomerService {
 
     private CustomerDocument load(String id) {
         return customers.findById(id).orElseThrow(() -> new IllegalArgumentException("Customer was not found"));
+    }
+
+    private void validateCatalog(CustomerRequest request) {
+        if (!catalog.allowsDocument(request.documentType())) {
+            throw new IllegalArgumentException("The document type is not in the catalog");
+        }
+        if (!catalog.allowsProfile(request.profile())) {
+            throw new IllegalArgumentException("The profile is not in the catalog");
+        }
     }
 
     private void validateNames(CustomerRequest request) {
