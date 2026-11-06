@@ -1,0 +1,147 @@
+openapi: 3.1.0
+info:
+  title: Customers
+  description: "Personal, business, VIP, and PYME customers."
+  version: 1.0.0
+servers:
+- url: http://127.0.0.1:8082
+  description: Generated server url
+security:
+- bearer-jwt: []
+paths:
+  /api/v1/customers/{id}:
+    get:
+      tags:
+      - customer-controller
+      operationId: findById
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SingleResponseEntityCustomerResponse"
+    put:
+      tags:
+      - customer-controller
+      operationId: update
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SingleResponseEntityCustomerResponse"
+    delete:
+      tags:
+      - customer-controller
+      operationId: delete
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SingleResponseEntityVoid"
+  /api/v1/customers:
+    get:
+      tags:
+      - customer-controller
+      operationId: findAll
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SingleResponseEntityListCustomerResponse"
+    post:
+      tags:
+      - customer-controller
+      operationId: create
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CustomerRequest"
+        required: true
+      responses:
+        "200":
+          description: OK
+          content:
+            '*/*':
+              schema:
+                $ref: "#/components/schemas/SingleResponseEntityCustomerResponse"
+components:
+  schemas:
+    CustomerRequest:
+      type: object
+      properties:
+        documentType:
+          type: string
+          enum:
+          - DNI
+          - CEX
+          - PASSPORT
+          - RUC
+        documentNumber:
+          type: string
+          minLength: 1
+        firstName:
+          type: string
+        lastName:
+          type: string
+        businessName:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        customerType:
+          type: string
+          enum:
+          - PERSONAL
+          - BUSINESS
+        profile:
+          type: string
+          enum:
+          - STANDARD
+          - VIP
+          - PYME
+      required:
+      - customerType
+      - documentNumber
+      - documentType
+      - profile
+    SingleResponseEntityCustomerResponse: {}
+    SingleResponseEntityListCustomerResponse: {}
+    SingleResponseEntityVoid: {}
+  securitySchemes:
+    bearer-jwt:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
