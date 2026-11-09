@@ -1,7 +1,7 @@
-package com.nttdata.bank.customer.config;
+package com.nttdata.bank.customer.infrastructure.redis;
 
-import com.nttdata.bank.customer.domain.CustomerProfile;
-import com.nttdata.bank.customer.domain.DocumentType;
+import com.nttdata.bank.customer.domain.model.CustomerProfile;
+import com.nttdata.bank.customer.domain.model.DocumentType;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

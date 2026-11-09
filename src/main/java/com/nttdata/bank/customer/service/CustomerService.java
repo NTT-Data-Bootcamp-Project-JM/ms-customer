@@ -1,12 +1,13 @@
-package com.nttdata.bank.customer.application;
+package com.nttdata.bank.customer.service;
 
-import com.nttdata.bank.customer.api.CustomerDtos.CustomerRequest;
-import com.nttdata.bank.customer.api.CustomerDtos.CustomerResponse;
-import com.nttdata.bank.customer.config.CustomerCatalog;
-import com.nttdata.bank.customer.domain.CustomerDocument;
-import com.nttdata.bank.customer.domain.CustomerRepository;
-import com.nttdata.bank.customer.domain.CustomerRules;
-import com.nttdata.bank.customer.domain.CustomerType;
+import com.nttdata.bank.customer.api.dto.CustomerRequest;
+import com.nttdata.bank.customer.api.dto.CustomerResponse;
+import com.nttdata.bank.customer.infrastructure.redis.CustomerCatalog;
+import com.nttdata.bank.customer.service.validation.CustomerValidation;
+import com.nttdata.bank.customer.domain.model.CustomerDocument;
+import com.nttdata.bank.customer.domain.model.CustomerType;
+import com.nttdata.bank.customer.domain.repository.CustomerRepository;
+import com.nttdata.bank.customer.mapper.CustomerMapper;
 import io.reactivex.rxjava3.core.Single;
 import io.reactivex.rxjava3.schedulers.Schedulers;
 import org.springframework.stereotype.Service;
@@ -21,14 +22,17 @@ public class CustomerService {
 
     private final CustomerRepository customers;
     private final CustomerCatalog catalog;
+    private final CustomerMapper mapper;
 
     /**
      * @param customers customer collection
      * @param catalog document types and profiles stored in Redis
+     * @param mapper domain-to-DTO mapper
      */
-    public CustomerService(CustomerRepository customers, CustomerCatalog catalog) {
+    public CustomerService(CustomerRepository customers, CustomerCatalog catalog, CustomerMapper mapper) {
         this.customers = customers;
         this.catalog = catalog;
+        this.mapper = mapper;
     }
 
     /**
@@ -40,13 +44,13 @@ public class CustomerService {
     public Single<CustomerResponse> create(CustomerRequest request) {
         return Single.fromCallable(() -> {
             validateNames(request);
-            CustomerRules.validate(request.customerType(), request.profile(), request.documentType());
+            CustomerValidation.validate(request.customerType(), request.profile(), request.documentType());
             validateCatalog(request);
             customers.findByDocumentTypeAndDocumentNumber(request.documentType(), request.documentNumber())
                     .ifPresent(existing -> {
                         throw new IllegalArgumentException("A customer with that document already exists");
                     });
-            return toResponse(customers.save(copy(new CustomerDocument(), request)));
+            return mapper.toResponse(customers.save(mapper.toNewDocument(request)));
         }).subscribeOn(Schedulers.io());
     }
 
@@ -54,7 +58,7 @@ public class CustomerService {
      * @return every customer
      */
     public Single<List<CustomerResponse>> findAll() {
-        return Single.fromCallable(() -> customers.findAll().stream().map(this::toResponse).toList())
+        return Single.fromCallable(() -> mapper.toResponseList(customers.findAll()))
                 .subscribeOn(Schedulers.io());
     }
 
@@ -63,7 +67,7 @@ public class CustomerService {
      * @return the customer
      */
     public Single<CustomerResponse> findById(String id) {
-        return Single.fromCallable(() -> toResponse(load(id))).subscribeOn(Schedulers.io());
+        return Single.fromCallable(() -> mapper.toResponse(load(id))).subscribeOn(Schedulers.io());
     }
 
     /**
@@ -76,7 +80,7 @@ public class CustomerService {
     public Single<CustomerResponse> update(String id, CustomerRequest request) {
         return Single.fromCallable(() -> {
             validateNames(request);
-            CustomerRules.validate(request.customerType(), request.profile(), request.documentType());
+            CustomerValidation.validate(request.customerType(), request.profile(), request.documentType());
             validateCatalog(request);
             CustomerDocument current = load(id);
             customers.findByDocumentTypeAndDocumentNumber(request.documentType(), request.documentNumber())
@@ -84,7 +88,8 @@ public class CustomerService {
                     .ifPresent(existing -> {
                         throw new IllegalArgumentException("A customer with that document already exists");
                     });
-            return toResponse(customers.save(copy(current, request)));
+            mapper.updateDocument(request, current);
+            return mapper.toResponse(customers.save(current));
         }).subscribeOn(Schedulers.io());
     }
 
@@ -125,25 +130,6 @@ public class CustomerService {
         if (request.customerType() == CustomerType.BUSINESS && isBlank(request.businessName())) {
             throw new IllegalArgumentException("A business customer needs a business name");
         }
-    }
-
-    private CustomerDocument copy(CustomerDocument target, CustomerRequest request) {
-        target.setDocumentType(request.documentType());
-        target.setDocumentNumber(request.documentNumber().trim());
-        target.setFirstName(request.firstName());
-        target.setLastName(request.lastName());
-        target.setBusinessName(request.businessName());
-        target.setEmail(request.email());
-        target.setPhone(request.phone());
-        target.setCustomerType(request.customerType());
-        target.setProfile(request.profile());
-        return target;
-    }
-
-    private CustomerResponse toResponse(CustomerDocument customer) {
-        return new CustomerResponse(customer.getId(), customer.getDocumentType(), customer.getDocumentNumber(),
-                customer.getFirstName(), customer.getLastName(), customer.getBusinessName(), customer.getEmail(),
-                customer.getPhone(), customer.getCustomerType(), customer.getProfile());
     }
 
     private boolean isBlank(String value) {

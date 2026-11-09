@@ -1,4 +1,8 @@
-package com.nttdata.bank.customer.domain;
+package com.nttdata.bank.customer.domain.repository;
+
+import com.nttdata.bank.customer.domain.model.DocumentType;
+
+import com.nttdata.bank.customer.domain.model.CustomerDocument;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
 

@@ -1,13 +1,14 @@
-package com.nttdata.bank.customer.application;
+package com.nttdata.bank.customer.service;
 
-import com.nttdata.bank.customer.api.CustomerDtos.CustomerRequest;
-import com.nttdata.bank.customer.api.CustomerDtos.CustomerResponse;
-import com.nttdata.bank.customer.config.CustomerCatalog;
-import com.nttdata.bank.customer.domain.CustomerDocument;
-import com.nttdata.bank.customer.domain.CustomerProfile;
-import com.nttdata.bank.customer.domain.CustomerRepository;
-import com.nttdata.bank.customer.domain.CustomerType;
-import com.nttdata.bank.customer.domain.DocumentType;
+import com.nttdata.bank.customer.api.dto.CustomerRequest;
+import com.nttdata.bank.customer.api.dto.CustomerResponse;
+import com.nttdata.bank.customer.infrastructure.redis.CustomerCatalog;
+import com.nttdata.bank.customer.domain.model.CustomerDocument;
+import com.nttdata.bank.customer.domain.model.CustomerProfile;
+import com.nttdata.bank.customer.domain.repository.CustomerRepository;
+import com.nttdata.bank.customer.domain.model.CustomerType;
+import com.nttdata.bank.customer.domain.model.DocumentType;
+import com.nttdata.bank.customer.mapper.CustomerMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
+import org.mapstruct.factory.Mappers;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -51,7 +53,7 @@ class CustomerServiceTest {
         store.clear();
         when(catalog.allowsDocument(any())).thenReturn(true);
         when(catalog.allowsProfile(any())).thenReturn(true);
-        service = new CustomerService(customers, catalog);
+        service = new CustomerService(customers, catalog, Mappers.getMapper(CustomerMapper.class));
         when(customers.save(any())).thenAnswer(invocation -> {
             CustomerDocument customer = invocation.getArgument(0);
             if (customer.getId() == null) {

@@ -1,4 +1,4 @@
-package com.nttdata.bank.customer.domain;
+package com.nttdata.bank.customer.domain.model;
 
 import lombok.Getter;
 import lombok.Setter;

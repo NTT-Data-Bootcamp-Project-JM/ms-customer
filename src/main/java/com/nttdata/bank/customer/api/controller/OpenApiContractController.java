@@ -1,4 +1,4 @@
-package com.nttdata.bank.customer.api;
+package com.nttdata.bank.customer.api.controller;
 
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;

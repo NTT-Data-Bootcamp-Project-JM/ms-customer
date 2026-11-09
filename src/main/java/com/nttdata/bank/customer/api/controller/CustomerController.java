@@ -1,9 +1,9 @@
-package com.nttdata.bank.customer.api;
+package com.nttdata.bank.customer.api.controller;
 
-import com.nttdata.bank.customer.api.CustomerDtos.CustomerRequest;
-import com.nttdata.bank.customer.api.CustomerDtos.CustomerResponse;
 import com.nttdata.bank.customer.api.contract.CustomerApi;
-import com.nttdata.bank.customer.application.CustomerService;
+import com.nttdata.bank.customer.api.dto.CustomerRequest;
+import com.nttdata.bank.customer.api.dto.CustomerResponse;
+import com.nttdata.bank.customer.service.CustomerService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;

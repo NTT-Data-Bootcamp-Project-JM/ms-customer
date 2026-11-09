@@ -1,11 +1,17 @@
-package com.nttdata.bank.customer.domain;
+package com.nttdata.bank.customer.service.validation;
+
+import com.nttdata.bank.customer.domain.model.DocumentType;
+
+import com.nttdata.bank.customer.domain.model.CustomerType;
+
+import com.nttdata.bank.customer.domain.model.CustomerProfile;
 
 /**
  * Profile and document rules that do not depend on Spring.
  */
-public final class CustomerRules {
+public final class CustomerValidation {
 
-    private CustomerRules() {
+    private CustomerValidation() {
     }
 
     /**

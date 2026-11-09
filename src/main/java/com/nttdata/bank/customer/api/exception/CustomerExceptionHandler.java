@@ -1,4 +1,4 @@
-package com.nttdata.bank.customer.api;
+package com.nttdata.bank.customer.api.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
